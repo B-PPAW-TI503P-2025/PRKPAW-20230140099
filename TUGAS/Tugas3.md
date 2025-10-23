@@ -14,3 +14,4 @@ presensi/check-out jika belum melakukan check-in:
 
 reports/daily:
 ![Tampilan reports_daily](reports_daily.png)
+
