@@ -1,14 +1,14 @@
 #Tampilan endpoint update data presensi
-![alt text](<Endpoint update data presensi.png>)
+![alt text](<ss/Endpoint update data presensi.png>)
 
 #Tampilan endpoint update jika format tanggal yang diisi tidak valid
-![alt text](<Endpoint format tanggal tidak valid.png>)
+![alt text](<ss/Endpoint format tanggal tidak valid.png>)
 
 #Tampilan endpoint delete data
-![alt text](<Endpoint delete data.png>)
+![alt text](<ss/Endpoint delete data.png>)
 
 #Tampilan endpoint search berdasarkan nama
-![alt text](<Endpoint search berdasarkan nama.png>)
+![alt text](<ss/Endpoint search berdasarkan nama.png>)
 
 #Tampilan endpoint search berdasarkan tanggal
-![alt text](<Endpoint search berdasarkan tanggal.png>)
+![alt text](<ss/Endpoint search berdasarkan tanggal.png>)
