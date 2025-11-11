@@ -107,7 +107,9 @@ try {
 		.json({message:"Akses ditolak: Anda bukan pemilik catatan ini"});
 	}
 	await recordToDelete.destroy();
-	res.status(204).send();
+
+	res.status(200).json();
+
 } catch (error) {
 	res
 		.status(500)

@@ -3,30 +3,30 @@ const { body, validationResult } = require("express-validator");
 // Validator untuk endpoint PUT /api/presensi/:id
 exports.validateUpdatePresensi = [
   // Validasi waktuCheckIn
-  body("waktuCheckIn")
+  body("checkIn")
     .optional() // Opsional, tidak wajib diisi
     .notEmpty()
-    .withMessage("waktuCheckIn tidak boleh kosong jika disertakan")
+    .withMessage("checkIn tidak boleh kosong jika disertakan")
     .isISO8601()
-    .withMessage("waktuCheckIn harus berformat tanggal yang valid (ISO 8601)")
+    .withMessage("checkIn harus berformat tanggal yang valid (ISO 8601)")
     .toDate(), // Convert string ke Date object
 
   // Validasi waktuCheckOut
-  body("waktuCheckOut")
+  body("checkOut")
     .optional() // Opsional, tidak wajib diisi
     .notEmpty()
-    .withMessage("waktuCheckOut tidak boleh kosong jika disertakan")
+    .withMessage("checkOut tidak boleh kosong jika disertakan")
     .isISO8601()
-    .withMessage("waktuCheckOut harus berformat tanggal yang valid (ISO 8601)")
+    .withMessage("checkOut harus berformat tanggal yang valid (ISO 8601)")
     .toDate() // Convert string ke Date object
     .custom((value, { req }) => {
       // Custom validation: checkOut harus setelah checkIn
-      if (req.body.waktuCheckIn && value) {
-        const checkIn = new Date(req.body.waktuCheckIn);
+      if (req.body.checkIn && value) {
+        const checkIn = new Date(req.body.checkIn);
         const checkOut = new Date(value);
         
         if (checkOut <= checkIn) {
-          throw new Error("waktuCheckOut harus setelah waktuCheckIn");
+          throw new Error("checkOut harus setelah checkIn");
         }
       }
       return true;
@@ -79,7 +79,19 @@ exports.validateUpdatePresensi = [
     .optional()
     .isISO8601()
     .withMessage("checkOut harus berformat tanggal yang valid")
-    .toDate(),
+    .toDate()
+    .custom((value, { req }) => {
+      // Validasi checkOut harus setelah checkIn (jika ada)
+      if (value && req.body.checkIn) {
+        const checkIn = new Date(req.body.checkIn);
+        const checkOut = new Date(value);
+        
+        if (checkOut <= checkIn) {
+          throw new Error("checkOut harus setelah checkIn");
+        }
+      }
+      return true;
+    }),
 
   (req, res, next) => {
     const errors = validationResult(req);
