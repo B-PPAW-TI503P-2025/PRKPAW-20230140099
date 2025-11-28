@@ -1,18 +1,21 @@
 // 1. Ganti sumber data dari array ke model Sequelize
 const { Presensi } = require("../models");
 const { format } = require("date-fns-tz");
-const { checkout } = require("../routes/presensi");
 const timeZone = "Asia/Jakarta";
+const jwt = require("jsonwebtoken");
+const JWT_SECRET = process.env.JWT_SECRET;
+
  	
 exports.CheckIn = async (req, res) => {
 	// 2. Gunakan try...catch untuk error handling
 	try {
 	const { id: userId, nama: userName } = req.user;
+	const { latitude, longitude } = req.body;
 	const waktuSekarang = new Date();
 
 	// 3. Ubah cara mencari data menggunakan 'findOne' dari Sequelize
 	const existingRecord = await Presensi.findOne({
-		where: { userId: userId, checkOut: null },
+		where: { userId: userId, checkIn: null },
 	});
 
 	if (existingRecord) {
@@ -24,8 +27,9 @@ exports.CheckIn = async (req, res) => {
 	// 4. Ubah cara membuat data baru menggunakan 'create' dari Sequelize
 	const newRecord = await Presensi.create({
 		userId: userId,
-		nama: userName,
 		checkIn: waktuSekarang,
+		latitude: latitude || null,
+		longitude: longitude || null
 	});
 	
 	const formattedData = {
