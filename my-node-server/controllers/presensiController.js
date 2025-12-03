@@ -15,7 +15,7 @@ exports.CheckIn = async (req, res) => {
 
 	// 3. Ubah cara mencari data menggunakan 'findOne' dari Sequelize
 	const existingRecord = await Presensi.findOne({
-		where: { userId: userId, checkIn: null },
+		where: { userId: userId, checkOut: null },
 	});
 
 	if (existingRecord) {

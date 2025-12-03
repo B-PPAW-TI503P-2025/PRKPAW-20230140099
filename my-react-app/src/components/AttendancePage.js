@@ -49,6 +49,7 @@ function AttendancePage() {
       setIsLoading(false);
     }
   };
+
   useEffect(() => {
     getLocation();
   }, []);
@@ -58,6 +59,10 @@ function AttendancePage() {
       setError("Lokasi belum didapatkan. Mohon izinkan akses lokasi.");
       return;
     }
+    
+    setError("");
+    setMessage("");
+    
     try {
       const config = {
         headers: {
@@ -66,8 +71,7 @@ function AttendancePage() {
       };
 
       const response = await axios.post(
-        "http://localhost:3001/api/attendance/check-in",
-        // Kirim data lokasi bersama request
+        "http://localhost:3001/api/presensi/check-in",
         {
           latitude: coords.lat,
           longitude: coords.lng,
@@ -84,14 +88,16 @@ function AttendancePage() {
   const handleCheckOut = async () => {
     setError("");
     setMessage("");
+    
     try {
       const config = {
         headers: {
           Authorization: `Bearer ${getToken()}`,
         },
       };
+      
       const response = await axios.post(
-        "http://localhost:3001/api/attendance/check-out",
+        "http://localhost:3001/api/presensi/check-out",
         {},
         config
       );
@@ -111,7 +117,7 @@ function AttendancePage() {
           </p>
           {error && <p className="text-red-600 mt-4">{error}</p>}
         </div>
-      ) : (
+      ) : coords ? (
         <div className="bg-white p-4 rounded-lg shadow-md w-full mb-8 px-8 max-w-6xl">
           <h3 className="text-xl font-semibold mb-2">Lokasi Terdeteksi:</h3>
           <div className="my-4 border rounded-lg overflow-hidden">
@@ -130,7 +136,18 @@ function AttendancePage() {
             </MapContainer>
           </div>
         </div>
-      )}
+      ) : error ? (
+        <div className="bg-white p-10 rounded-lg shadow-md w-full max-w-6xl mb-8 text-center">
+          <p className="text-red-600 text-lg">{error}</p>
+          <button
+            onClick={getLocation}
+            className="mt-4 py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700"
+          >
+            Coba Lagi
+          </button>
+        </div>
+      ) : null}
+
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md text-center">
         <h2 className="text-3xl font-bold mb-6 text-gray-800">
           Lakukan Presensi
@@ -142,14 +159,16 @@ function AttendancePage() {
         <div className="flex space-x-4">
           <button
             onClick={handleCheckIn}
-            className="w-full py-3 px-4 bg-green-600 text-white font-semibold rounded-md shadow-sm hover:bg-green-700"
+            disabled={!coords}
+            className="w-full py-3 px-4 bg-green-600 text-white font-semibold rounded-md shadow-sm hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             Check-In
           </button>
 
           <button
             onClick={handleCheckOut}
-            className="w-full py-3 px-4 bg-red-600 text-white font-semibold rounded-md shadow-sm hover:bg-red-700"
+            disabled={!coords}
+            className="w-full py-3 px-4 bg-red-600 text-white font-semibold rounded-md shadow-sm hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             Check-Out
           </button>
