@@ -2,15 +2,36 @@
 const { Presensi } = require("../models");
 const { format } = require("date-fns-tz");
 const timeZone = "Asia/Jakarta";
-const jwt = require("jsonwebtoken");
-const JWT_SECRET = process.env.JWT_SECRET;
 
+// Untuk upload foto
+const multer = require('multer');
+const path = require('path');
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/'); 
+  },
+  filename: (req, file, cb) => {
+    // Format nama file: userId-timestamp.jpg
+    cb(null, `${req.user.id}-${Date.now()}${path.extname(file.originalname)}`);
+  }
+});
+
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Hanya file gambar yang diperbolehkan!'), false);
+  }
+};
+
+exports.upload = multer({ storage: storage, fileFilter: fileFilter });
  	
 exports.CheckIn = async (req, res) => {
-	// 2. Gunakan try...catch untuk error handling
-	try {
-	const { id: userId, nama: userName } = req.user;
-	const { latitude, longitude } = req.body;
+  try {
+    const { id: userId, nama: userName } = req.user;
+    const { latitude, longitude } = req.body;
+    const buktiFoto = req.file ? req.file.path : null;
 	const waktuSekarang = new Date();
 
 	// 3. Ubah cara mencari data menggunakan 'findOne' dari Sequelize
@@ -29,15 +50,17 @@ exports.CheckIn = async (req, res) => {
 		userId: userId,
 		checkIn: waktuSekarang,
 		latitude: latitude || null,
-		longitude: longitude || null
+		longitude: longitude || null,
+		buktiFoto: buktiFoto,
 	});
-	
+
 	const formattedData = {
-		userId: newRecord.userId,
-		nama: newRecord.nama,
-		checkIn: format(newRecord.checkIn, "yyyy-MM-dd HH:mm:ssXXX", { timeZone }),
-		checkOut: null
-	};
+      userId: newRecord.userId,
+      checkIn: format(newRecord.checkIn, "yyyy-MM-dd HH:mm:ssXXX", { timeZone }),
+      latitude: newRecord.latitude,
+      longitude: newRecord.longitude,
+      buktiFoto: newRecord.buktiFoto,
+    };
 
 	res.status(201).json({
 		message: `Halo ${userName}, check-in Anda berhasil pada pukul ${format(

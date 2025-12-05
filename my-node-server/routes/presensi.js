@@ -5,7 +5,7 @@ const { authenticateToken } = require('../middleware/permissionMiddleware');
 const { validateUpdatePresensi, validateCreatePresensi } = require('../validators/presensiValidator');
 
 router.use(authenticateToken);
-router.post("/check-in", presensiController.CheckIn);
+router.post('/check-in', [authenticateToken, presensiController.upload.single('image')], presensiController.CheckIn);
 router.post("/check-out", presensiController.CheckOut);
 router.put("/:id", validateUpdatePresensi, presensiController.updatePresensi);
 router.delete("/:id", presensiController.deletePresensi);

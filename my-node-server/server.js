@@ -5,6 +5,7 @@ const app = express();
 const PORT = 3001;
 const morgan = require("morgan");
 const bookRoutes = require("./routes/books");
+const path = require('path'); 
 
 // Import router
 const presensiRoutes = require("./routes/presensi");
@@ -41,6 +42,8 @@ app.use((err, req, res, next) => {
 		error: err.message 
 	});
 });
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.listen(PORT, () => {
 	console.log(`Express server running at http://localhost:${PORT}/`);
