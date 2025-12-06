@@ -8,6 +8,10 @@ function ReportPage() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
 
+    // State untuk modal foto
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const fetchReports = async (query) => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -39,13 +43,40 @@ function ReportPage() {
   useEffect(() => {
     fetchReports("");
   }, [navigate]);
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     fetchReports(searchTerm);
   };
 
+    // Fungsi untuk membuka modal foto
+  const openPhotoModal = (photoPath) => {
+    if (photoPath) {
+      setSelectedPhoto(`http://localhost:3001/${photoPath}`);
+      setIsModalOpen(true);
+    }
+  };
+
+  // Fungsi untuk menutup modal
+  const closePhotoModal = () => {
+    setIsModalOpen(false);
+    setSelectedPhoto(null);
+  };
+
+  // Menutup modal dengan tombol ESC
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && isModalOpen) {
+        closePhotoModal();
+      }
+    };
+    
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [isModalOpen]);
+
   return (
-    <div className="max-w-6xl mx-auto p-8">
+    <div className="max-w-7xl mx-auto p-8">
       <h1 className="text-3xl font-bold text-gray-800 mb-6">
         Laporan Presensi Harian
       </h1>
@@ -71,7 +102,7 @@ function ReportPage() {
       )}
 
       {!error && (
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
+        <div className="bg-white shadow-md rounded-lg overflow-hidden overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -89,6 +120,9 @@ function ReportPage() {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Longitude
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Bukti Foto
                 </th>
               </tr>
             </thead>
@@ -117,12 +151,25 @@ function ReportPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {presensi.longitude || "N/A"}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {presensi.buktiFoto ? (
+                        <img
+                          src={`http://localhost:3001/${presensi.buktiFoto}`}
+                          alt="Bukti Foto"
+                          className="h-16 w-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => openPhotoModal(presensi.buktiFoto)}
+                          title="Klik untuk memperbesar"
+                        />
+                      ) : (
+                        <span className="text-gray-400 italic">Tidak ada foto</span>
+                      )}
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
                   <td
-                    colSpan="3"
+                    colSpan="6"
                     className="px-6 py-4 text-center text-gray-500"
                   >
                     Tidak ada data yang ditemukan.
@@ -131,6 +178,40 @@ function ReportPage() {
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Modal untuk menampilkan foto ukuran penuh */}
+      {isModalOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+          onClick={closePhotoModal}
+        >
+          <div 
+            className="relative max-w-4xl max-h-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Tombol Close */}
+            <button
+              onClick={closePhotoModal}
+              className="absolute -top-10 right-0 text-white hover:text-gray-300 text-3xl font-bold"
+              title="Tutup (ESC)"
+            >
+              ✕
+            </button>
+            
+            {/* Foto Ukuran Penuh */}
+            <img
+              src={selectedPhoto}
+              alt="Bukti Foto Full Size"
+              className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+            />
+            
+            {/* Info */}
+            <div className="mt-4 text-center text-white text-sm">
+              <p>Klik di luar foto atau tekan ESC untuk menutup</p>
+            </div>
+          </div>
         </div>
       )}
     </div>
