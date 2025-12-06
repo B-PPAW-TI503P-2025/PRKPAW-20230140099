@@ -31,8 +31,10 @@ exports.CheckIn = async (req, res) => {
   try {
     const { id: userId, nama: userName } = req.user;
     const { latitude, longitude } = req.body;
-    const buktiFoto = req.file ? req.file.path : null;
 	const waktuSekarang = new Date();
+	const buktiFoto = req.file 
+	? req.file.path.replace(/\\/g, '/') 
+	: null;
 
 	// 3. Ubah cara mencari data menggunakan 'findOne' dari Sequelize
 	const existingRecord = await Presensi.findOne({

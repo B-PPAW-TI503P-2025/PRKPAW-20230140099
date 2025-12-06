@@ -15,6 +15,15 @@ exports.getDailyReport = async (req, res) => {
           attributes: ["nama"],
         },
       ],
+
+      attributes: [
+        "id",
+        "checkIn",
+        "checkOut",
+        "latitude",
+        "longitude",
+        "buktiFoto",
+        "userId"],
     };
 
     if (nama) {
