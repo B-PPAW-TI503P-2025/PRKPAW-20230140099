@@ -1,6 +1,6 @@
-// src/components/PresensiPage.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
+import Webcam from "react-webcam";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import icon from "leaflet/dist/images/marker-icon.png";
@@ -24,11 +24,18 @@ function AttendancePage() {
   const [coords, setCoords] = useState(null); // {lat, lng}
   const [isLoading, setIsLoading] = useState(true);
 
+  const [image, setImage] = useState(null); // State untuk menyimpan hasil foto
+  const webcamRef = useRef(null);
+
+  const capture = useCallback(() => {
+    const imageSrc = webcamRef.current.getScreenshot();
+    setImage(imageSrc);
+  }, [webcamRef]);
+
   const getToken = () => {
     return localStorage.getItem("token");
   };
 
-  // Fungsi untuk mendapatkan lokasi pengguna
   const getLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -49,34 +56,35 @@ function AttendancePage() {
       setIsLoading(false);
     }
   };
-
   useEffect(() => {
     getLocation();
   }, []);
 
   const handleCheckIn = async () => {
-    if (!coords) {
-      setError("Lokasi belum didapatkan. Mohon izinkan akses lokasi.");
+
+    if (!coords || !image) {
+      setError("Lokasi dan Foto wajib ada!");
       return;
     }
-    
-    setError("");
-    setMessage("");
-    
+
+    setError(null);
+    setMessage(null);
+
     try {
-      const config = {
-        headers: {
-          Authorization: `Bearer ${getToken()}`,
-        },
-      };
+      const blob = await (await fetch(image)).blob();
+
+      // Buat FormData
+      const formData = new FormData();
+      formData.append("latitude", coords.lat);
+      formData.append("longitude", coords.lng);
+      formData.append("image", blob, "selfie.jpg");
 
       const response = await axios.post(
         "http://localhost:3001/api/presensi/check-in",
-        {
-          latitude: coords.lat,
-          longitude: coords.lng,
-        },
-        config
+
+        formData,
+        { headers: { Authorization: `Bearer ${getToken()}` } }
+
       );
 
       setMessage(response.data.message);
@@ -88,14 +96,12 @@ function AttendancePage() {
   const handleCheckOut = async () => {
     setError("");
     setMessage("");
-    
     try {
       const config = {
         headers: {
           Authorization: `Bearer ${getToken()}`,
         },
       };
-      
       const response = await axios.post(
         "http://localhost:3001/api/presensi/check-out",
         {},
@@ -117,7 +123,7 @@ function AttendancePage() {
           </p>
           {error && <p className="text-red-600 mt-4">{error}</p>}
         </div>
-      ) : coords ? (
+      ) : (
         <div className="bg-white p-4 rounded-lg shadow-md w-full mb-8 px-8 max-w-6xl">
           <h3 className="text-xl font-semibold mb-2">Lokasi Terdeteksi:</h3>
           <div className="my-4 border rounded-lg overflow-hidden">
@@ -136,17 +142,40 @@ function AttendancePage() {
             </MapContainer>
           </div>
         </div>
-      ) : error ? (
-        <div className="bg-white p-10 rounded-lg shadow-md w-full max-w-6xl mb-8 text-center">
-          <p className="text-red-600 text-lg">{error}</p>
+      )}
+
+
+      <div className="my-4 border rounded-lg overflow-hidden bg-black">
+        {image ? (
+          <img src={image} alt="Selfie" className="w-full" />
+        ) : (
+          <Webcam
+            audio={false}
+            ref={webcamRef}
+            screenshotFormat="image/jpeg"
+            className="w-full"
+          />
+        )}
+      </div>
+
+      <div className="mb-4">
+        {!image ? (
           <button
-            onClick={getLocation}
-            className="mt-4 py-2 px-6 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700"
+            onClick={capture}
+            className="bg-blue-500 text-white px-4 py-2 rounded w-full"
           >
-            Coba Lagi
+            Ambil Foto
           </button>
-        </div>
-      ) : null}
+        ) : (
+          <button
+            onClick={() => setImage(null)}
+            className="bg-gray-500 text-white px-4 py-2 rounded w-full"
+          >
+            Foto Ulang
+          </button>
+        )}
+      </div>
+
 
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md text-center">
         <h2 className="text-3xl font-bold mb-6 text-gray-800">
@@ -159,16 +188,15 @@ function AttendancePage() {
         <div className="flex space-x-4">
           <button
             onClick={handleCheckIn}
-            disabled={!coords}
-            className="w-full py-3 px-4 bg-green-600 text-white font-semibold rounded-md shadow-sm hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            disabled={!image || !coords}
+            className="w-full py-3 px-4 bg-green-600 text-white font-semibold rounded-md shadow-sm hover:bg-green-700"
           >
             Check-In
           </button>
 
           <button
             onClick={handleCheckOut}
-            disabled={!coords}
-            className="w-full py-3 px-4 bg-red-600 text-white font-semibold rounded-md shadow-sm hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="w-full py-3 px-4 bg-red-600 text-white font-semibold rounded-md shadow-sm hover:bg-red-700"
           >
             Check-Out
           </button>
